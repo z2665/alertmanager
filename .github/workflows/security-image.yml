@@ -59,9 +59,18 @@ jobs:
       - name: Verify architectures
         run: |
           for arch in amd64 arm64; do
-            output=$(docker run --rm --platform "linux/${arch}" "ghcr.io/${{ github.repository_owner }}/alertmanager:${{ inputs.image-tag }}" --version)
+            digest=$(docker buildx imagetools inspect "ghcr.io/${{ github.repository_owner }}/alertmanager:${{ inputs.image-tag }}" --raw | jq -r --arg arch "$arch" '.manifests[] | select(.platform.architecture == $arch) | .digest')
+            docker create --name "verify-${arch}" "ghcr.io/${{ github.repository_owner }}/alertmanager@${digest}"
+            docker cp "verify-${arch}:/bin/alertmanager" "/tmp/alertmanager-${arch}"
+            docker rm "verify-${arch}"
+            if [[ "$arch" == arm64 ]]; then
+              expected="ARM aarch64"
+            else
+              expected="x86-64"
+            fi
+            output=$(file "/tmp/alertmanager-${arch}")
             case "$output" in
-              *"platform: linux/${arch}"*) ;;
+              *"$expected"*) ;;
               *) echo "unexpected architecture: $output"; exit 1 ;;
             esac
           done
