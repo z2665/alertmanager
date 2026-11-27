@@ -1,4 +1,4 @@
-ARG DISTROLESS_ARCH="amd64"
+ARG DISTROLESS_ARCH=$TARGETARCH
 
 # Use DISTROLESS_ARCH for base image selection (handles armv7->arm mapping).
 FROM gcr.io/distroless/static-debian13:nonroot-${DISTROLESS_ARCH}
