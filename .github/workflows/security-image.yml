@@ -36,10 +36,17 @@ jobs:
           make test
       - name: Build Linux binaries
         run: |
+          VERSION=$(cat VERSION)
+          REVISION=$(git rev-parse HEAD)
+          BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          BUILD_USER="$(whoami)@$(hostname)"
+          BUILD_DATE=$(date -u +%Y%m%d-%H:%M:%S)
+          LD_FLAGS="-X github.com/prometheus/common/version.Version=$VERSION -X github.com/prometheus/common/version.Revision=$REVISION -X github.com/prometheus/common/version.Branch=$BRANCH -X github.com/prometheus/common/version.BuildUser=$BUILD_USER -X github.com/prometheus/common/version.BuildDate=$BUILD_DATE"
           for arch in amd64 arm64; do
             rm -f alertmanager amtool
+            GOOS=linux GOARCH="${arch}" CGO_ENABLED=0 go build -tags netgo -ldflags "$LD_FLAGS" -o alertmanager ./cmd/alertmanager
+            GOOS=linux GOARCH="${arch}" CGO_ENABLED=0 go build -tags netgo -ldflags "$LD_FLAGS" -o amtool ./cmd/amtool
             mkdir -p ".build/linux-${arch}"
-            GOOS=linux GOARCH="${arch}" CGO_ENABLED=0 "$(go env GOPATH)/bin/promu" build --prefix .
             cp alertmanager amtool ".build/linux-${arch}/"
           done
       - name: Build and push image
