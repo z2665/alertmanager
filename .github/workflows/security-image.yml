@@ -37,6 +37,7 @@ jobs:
       - name: Build Linux binaries
         run: |
           for arch in amd64 arm64; do
+            rm -f alertmanager amtool
             mkdir -p ".build/linux-${arch}"
             GOOS=linux GOARCH="${arch}" CGO_ENABLED=0 "$(go env GOPATH)/bin/promu" build --prefix .
             cp alertmanager amtool ".build/linux-${arch}/"
