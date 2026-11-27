@@ -1,3 +1,4 @@
+ARG TARGETARCH
 ARG DISTROLESS_ARCH=$TARGETARCH
 
 # Use DISTROLESS_ARCH for base image selection (handles armv7->arm mapping).
