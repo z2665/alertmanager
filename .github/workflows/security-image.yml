@@ -48,3 +48,12 @@ jobs:
             -f Dockerfile.distroless \
             -t "ghcr.io/${{ github.repository_owner }}/alertmanager:${{ inputs.image-tag }}" \
             --push .
+      - name: Verify architectures
+        run: |
+          for arch in amd64 arm64; do
+            output=$(docker run --rm --platform "linux/${arch}" "ghcr.io/${{ github.repository_owner }}/alertmanager:${{ inputs.image-tag }}" --version)
+            case "$output" in
+              *"platform: linux/${arch}"*) ;;
+              *) echo "unexpected architecture: $output"; exit 1 ;;
+            esac
+          done
